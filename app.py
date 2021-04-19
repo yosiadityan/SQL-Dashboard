@@ -68,11 +68,10 @@ elif page == "⚽ FIFA World Cup":
 
 	st.header('👀 Dataset Preview')
 	st.markdown("""Here are some data sample from the database. **match** data obtained from WorldCupMatches.csv file and **info** got from WorldCups.csv file.""")
-	engine, all_df = fetch_db(os.getenv('db-uri'))
-	print(all_df.keys())
+	engine, all_df = fetch_db(os.getenv('fifa-db-uri'))
 	for table in all_df:
 		st.subheader(table)
-		st.dataframe(all_df[table].head(15))
+		st.dataframe(all_df[table])
 
 
 	st.header('🕵🏼‍♂️ The Question and Data')
@@ -92,7 +91,114 @@ ORDER BY "Stage" ASC;''',
 	'''SELECT "Year", "Stage", COUNT(1) AS "Number of Matches"
 FROM matches
 GROUP BY "Year", "Stage"
-ORDER BY 1, 3 DESC;'''
+ORDER BY 1, 3 DESC;''', 
+
+	'''Since 1930 until 2014, how many number of matches win by each country?''':
+	'''WITH match_result AS (
+	SELECT
+		CASE
+			WHEN "Home Team Goals" > "Away Team Goals" THEN "Home Team Name"
+			WHEN "Home Team Goals" < "Away Team Goals" THEN "Away Team Name"
+			ELSE NULL
+	END AS "Team Name"
+	FROM matches
+	)
+SELECT "Team Name", COUNT(1) AS "Number of Matches"
+FROM match_result
+WHERE "Team Name" IS NOT NULL
+GROUP BY 1
+ORDER BY 2 DESC;''',
+
+	'''What is the top 10 in terms of year that has the most country participants?''':
+	'''WITH all_country_year AS (
+	SELECT "Year", "Home Team Name" AS "Team Name"
+	FROM matches
+	UNION ALL
+	SELECT "Year", "Away Team Name" AS "Team Name"
+	FROM matches
+)
+SELECT
+	"Year", 
+	COUNT(DISTINCT "Team Name") AS "Number of Country Participants"
+FROM all_country_year
+GROUP BY "Year"
+ORDER BY 2 DESC
+LIMIT 10;''' ,
+
+	'''What is the most frequent time to play matches?''':
+	'''SELECT 
+	CAST("Datetime" AS TIME) AS "Match Time", 
+	COUNT(1) AS "Number of Matches"
+FROM matches
+GROUP BY "Match Time"
+ORDER BY 2 DESC;''',
+
+	'''How many times each country gets first, second, third place and its total times it gets into top three?''':
+	'''WITH country_win AS (
+	SELECT "Winner" AS "Country", '1st Place' AS "Win" FROM info
+	UNION ALL
+	SELECT "Runners-Up" AS "Country", '2nd Place' AS "Win" FROM info
+	UNION ALL
+	SELECT "Third" AS "Country", '3rd Place' AS "Win" FROM info
+	UNION ALL
+	SELECT "Fourth" AS "Country", '4th Place' AS "Win" FROM info
+)
+
+SELECT
+	COALESCE("Country", 'Total') AS "Country",
+	COALESCE("Win", 'All Wins') AS "Win",
+	COUNT(*) AS "Number of win"
+FROM country_win
+GROUP BY ROLLUP("Country", "Win")
+ORDER BY 1, 2;''',
+
+	'''What is the running total of Attendances for each FIFA World Cup event since 1930 to 2014?''':
+	'''SELECT
+	"Year",
+	SUM("Attendance") 
+		OVER(ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+		AS "Total Attendances"
+FROM info;''',
+
+	'''What is the moving average of goals scored for the last three matches for each country?''':
+	'''WITH all_team AS (
+	SELECT 
+		"Year", 
+		"Datetime", 
+		"Home Team Name" AS "Team", 
+		"Home Team Goals" AS "Goals" 
+	FROM matches
+	UNION ALL
+	SELECT 
+		"Year", 
+		"Datetime", 
+		"Away Team Name" AS "Team", 
+		"Away Team Goals" AS "Goals" 
+	FROM matches
+)
+SELECT
+	"Team",
+	"Year",
+	CONCAT(DATE("Datetime"), ' ', CAST("Datetime" AS TIME)) AS "Date Time",
+	AVG("Goals")
+		OVER(PARTITION BY "Team"
+			ORDER BY "Datetime" ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) 
+			AS "Goals Moving Avg"
+FROM all_team;''',
+
+	'''Which decades of FIFA World Cup event that has number of matches more than 100 and average goals scored more than 2.5?''':
+	'''SELECT
+	CONCAT(LEFT("Year"::VARCHAR(4), 3), '0') AS "Decade",
+	COUNT(*) AS "Total Matches",
+	AVG("Home Team Goals" + "Away Team Goals") AS "Avg Goals Scored"
+FROM matches
+GROUP BY 1
+HAVING 
+	COUNT(*) >= 100 AND
+	AVG("Home Team Goals" + "Away Team Goals") >= 2.5;'''
+
+## Decade with number of matches and goals scored more than xxxx >>> use having
+
 }
 
 	quest = st.selectbox(label="", options=list(quest_query.keys()))
@@ -111,6 +217,3 @@ ORDER BY 1, 3 DESC;'''
 		# st.dataframe(pd.read_sql(quest_query[quest], con).style.highlight_max(axis=0))
 
 	credit()
-
-# with st.echo(code_location='below'):	 
-# 	st.write('This code will be printed')
