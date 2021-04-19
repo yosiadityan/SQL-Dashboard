@@ -12,7 +12,7 @@ Photo by <a href="https://unsplash.com/@kmuza?utm_source=unsplash&utm_medium=ref
 
 Knowing the high demand of SQL skill, I feel the need to create a portfolio project to demonstrate my SQL skills. The end-product of this project is to create a web dashboard where there are set of questions related to each database provided and set of answers in form of data table fetched from database using SQL query only. So, in other words, each questions about the dataset in database will be answered by providing data from database using SQL query only.The web dashboard can be seen in [here](http://sql-dashboard.yosiadityan.xyz/).
 
-Currently, there is only one dataset provided with its own set of questions and answers. But, this dashboard will be updated in the future with more dataset and its set of questions and answers as well :smile:
+Currently, there is only one dataset provided with its own set of questions and answers. But, this dashboard will be updated in the future with more dataset and its set of questions and answers as well! :smile:
 
 > Go visit my [personal website](https://yosiadityan.xyz) to get more information about this project :wink:
 
@@ -22,3 +22,10 @@ The dataset used in this project is obtained from various sources:
 
 
 ## Dashboard Preview
+> Check the live version of the dashboard [here](http://sql-dashboard.yosiadityan.xyz/)! 💻
+
+
+![dashboard_1](https://github.com/yosiadityan/SQL-Dashboard/blob/master/Assets/Screenshot_2021-04-19%20SQL%20Dashboard%20%C2%B7%20Streamlit_1.png)
+![dashboard_2](https://github.com/yosiadityan/SQL-Dashboard/blob/master/Assets/Screenshot_2021-04-19%20SQL%20Dashboard%20%C2%B7%20Streamlit_2.png)
+![dashboard_3](https://github.com/yosiadityan/SQL-Dashboard/blob/master/Assets/Screenshot_2021-04-19%20SQL%20Dashboard%20%C2%B7%20Streamlit_3.png)
+![dashboard_4](https://github.com/yosiadityan/SQL-Dashboard/blob/master/Assets/Screenshot_2021-04-19%20SQL%20Dashboard%20%C2%B7%20Streamlit_4.png)
