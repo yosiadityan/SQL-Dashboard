@@ -41,7 +41,8 @@ def about_page():
 	st.markdown("""My name is **Yosi** and welcome to my **SQL Dashboard project**!""")
 	st.markdown("""As the name suggest, the goal of this project to create a dashboard that displays some data based on the questions using SQL queries only. In a way, this project serves as my portfolio project to practice and show my SQL skills 👍🏼. The datasets used in this project is obtained from various sources and cleaned before used in this dashboard. Each page use different datasets and answers different set of questions as well.""")
 	st.markdown("""I do know that this project is not perfect *(yet)* and still has many flaws 😞. So, don't hesitate to give me feedback and reaching out to me via [LinkedIn](https://linkedin.com/in/yosiadityan/), [Github](https://github.com/yosiadityan/) or [my personal website](https://yosiadityan.xyz/)🍻""")
-	st.markdown("""Now, go check out the SQL dashboard I've made by choosing other page from the sidebar on the left! 👈🏼""")
+	st.markdown("""Now, go check out the SQL dashboard I've made by choosing other pages from the sidebar on the left! 👈🏼""")
+	st.markdown("""Or go to `Write Your Own Queries` page to try write your own queries based on dataset available 😉""")
 
 
 set_up()
@@ -52,10 +53,38 @@ st.set_page_config(page_title='SQL Dashboard',
 
 
 page = st.sidebar.selectbox(label="🚀 Where do you want to go?",
-	options=("😆 About", "⚽ FIFA World Cup"))
+	options=("😆 About", "⚽ FIFA World Cup", "✍🏻 Write Your Own Queries"))
 
 if page == "😆 About":
 	about_page()
+elif page == "✍🏻 Write Your Own Queries":
+	st.title('Write Your Own Queries ✍🏻')
+	st.write('')
+	st.write('')
+
+	st.header('📚 Choose The Dataset')
+	dataset = st.selectbox(label="Pick one dataset that interests you",  
+		options=["⚽ FIFA World Cup"])
+	dataset_db = {"⚽ FIFA World Cup": os.getenv('fifa-db-uri')}
+	st.write('')
+	st.write('')
+
+	st.header('🙈 Tables Preview')
+	your_engine, all_df = fetch_db(os.getenv('fifa-db-uri'))
+	for table in all_df:
+		st.subheader(table)
+		st.dataframe(all_df[table])
+
+	st.header('📝 Your Query and Result')
+	st.subheader('SQL Query')
+	your_query = st.text_area(label="")
+
+	if st.button('Get the Data!'):
+		st.subheader('The Data Result')
+		with your_engine.connect() as con:
+			st.dataframe(pd.read_sql(your_query, con), height=600)
+
+	credit()
 elif page == "⚽ FIFA World Cup":
 	st.title('SQL Dashboard: FIFA World Cup ⚽')
 	st.write('')
