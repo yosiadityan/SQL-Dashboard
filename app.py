@@ -11,14 +11,14 @@ def set_up():
 
 def credit():
 	for i in range(10):
-		st.write('')
+		st.text('')
 	st.info('''Give me a 👋 by visiting my **[LinkedIn](https://linkedin.com/in/yosiadityan)**,  **[Github](https://github.com/yosiadityan/)** or **[personal website](https://yosiadityan.xyz/)** where you can see my other projects as well! 🍻''')
 
 
 @st.cache(allow_output_mutation=True)
-def fetch_db(db_uri):
+def fetch_db(db_uri, schema_name):
 	engine = db.create_engine(db_uri)
-	meta = db.MetaData()
+	meta = db.MetaData(schema=schema_name)
 	meta.reflect(engine)
 	all_df = {}
 	with engine.connect() as con:
@@ -70,7 +70,7 @@ elif page == "✍🏻 Write Your Own Queries":
 	st.write('')
 
 	st.header('🙈 Tables Preview')
-	your_engine, all_df = fetch_db(os.getenv('fifa-db-uri'))
+	your_engine, all_df = fetch_db(os.getenv('fifa-db-uri'), 'fifa')
 	for table in all_df:
 		st.subheader(table)
 		st.dataframe(all_df[table])
@@ -97,8 +97,9 @@ elif page == "⚽ FIFA World Cup":
 
 	st.header('👀 Dataset Preview')
 	st.markdown("""Here are some data sample from the database. **match** data obtained from WorldCupMatches.csv file and **info** got from WorldCups.csv file.""")
-	engine, all_df = fetch_db(os.getenv('fifa-db-uri'))
+	engine, all_df = fetch_db(os.getenv('fifa-db-uri'), 'fifa')
 	for table in all_df:
+		print(table)
 		st.subheader(table)
 		st.dataframe(all_df[table])
 
@@ -109,16 +110,16 @@ elif page == "⚽ FIFA World Cup":
 	quest_query = {
 	'''How many stadium has been used to organize FIFA World Cup matches?''':
 	'''SELECT COUNT(DISTINCT "Stadium") AS "Stadium Count"
-FROM matches;''', 
+FROM fifa.matches;''', 
 
 	'''What kind of stages played in FIFA World Cup Matches?''':
 	'''SELECT DISTINCT "Stage"
-FROM matches
+FROM fifa.matches
 ORDER BY "Stage" ASC;''',
 
 	'''How many times each stage is played in each year?''':
 	'''SELECT "Year", "Stage", COUNT(1) AS "Number of Matches"
-FROM matches
+FROM fifa.matches
 GROUP BY "Year", "Stage"
 ORDER BY 1, 3 DESC;''', 
 
@@ -130,7 +131,7 @@ ORDER BY 1, 3 DESC;''',
 			WHEN "Home Team Goals" < "Away Team Goals" THEN "Away Team Name"
 			ELSE NULL
 	END AS "Team Name"
-	FROM matches
+	FROM fifa.matches
 	)
 SELECT "Team Name", COUNT(1) AS "Number of Matches"
 FROM match_result
@@ -141,10 +142,10 @@ ORDER BY 2 DESC;''',
 	'''What is the top 10 in terms of year that has the most country participants?''':
 	'''WITH all_country_year AS (
 	SELECT "Year", "Home Team Name" AS "Team Name"
-	FROM matches
+	FROM fifa.matches
 	UNION ALL
 	SELECT "Year", "Away Team Name" AS "Team Name"
-	FROM matches
+	FROM fifa.matches
 )
 SELECT
 	"Year", 
@@ -158,19 +159,19 @@ LIMIT 10;''' ,
 	'''SELECT 
 	CAST("Datetime" AS TIME) AS "Match Time", 
 	COUNT(1) AS "Number of Matches"
-FROM matches
+FROM fifa.matches
 GROUP BY "Match Time"
 ORDER BY 2 DESC;''',
 
 	'''How many times each country gets first, second, third place and its total times it gets into top three?''':
 	'''WITH country_win AS (
-	SELECT "Winner" AS "Country", '1st Place' AS "Win" FROM info
+	SELECT "Winner" AS "Country", '1st Place' AS "Win" FROM fifa.info
 	UNION ALL
-	SELECT "Runners-Up" AS "Country", '2nd Place' AS "Win" FROM info
+	SELECT "Runners-Up" AS "Country", '2nd Place' AS "Win" FROM fifa.info
 	UNION ALL
-	SELECT "Third" AS "Country", '3rd Place' AS "Win" FROM info
+	SELECT "Third" AS "Country", '3rd Place' AS "Win" FROM fifa.info
 	UNION ALL
-	SELECT "Fourth" AS "Country", '4th Place' AS "Win" FROM info
+	SELECT "Fourth" AS "Country", '4th Place' AS "Win" FROM fifa.info
 )
 
 SELECT
@@ -187,7 +188,7 @@ ORDER BY 1, 2;''',
 	SUM("Attendance") 
 		OVER(ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
 		AS "Total Attendances"
-FROM info;''',
+FROM fifa.info;''',
 
 	'''What is the moving average of goals scored for the last three matches for each country?''':
 	'''WITH all_team AS (
@@ -196,14 +197,14 @@ FROM info;''',
 		"Datetime", 
 		"Home Team Name" AS "Team", 
 		"Home Team Goals" AS "Goals" 
-	FROM matches
+	FROM fifa.matches
 	UNION ALL
 	SELECT 
 		"Year", 
 		"Datetime", 
 		"Away Team Name" AS "Team", 
 		"Away Team Goals" AS "Goals" 
-	FROM matches
+	FROM fifa.matches
 )
 SELECT
 	"Team",
@@ -220,14 +221,11 @@ FROM all_team;''',
 	CONCAT(LEFT("Year"::VARCHAR(4), 3), '0') AS "Decade",
 	COUNT(*) AS "Total Matches",
 	AVG("Home Team Goals" + "Away Team Goals") AS "Avg Goals Scored"
-FROM matches
+FROM fifa.matches
 GROUP BY 1
 HAVING 
 	COUNT(*) >= 100 AND
 	AVG("Home Team Goals" + "Away Team Goals") >= 2.5;'''
-
-## Decade with number of matches and goals scored more than xxxx >>> use having
-
 }
 
 	quest = st.selectbox(label="", options=list(quest_query.keys()))
